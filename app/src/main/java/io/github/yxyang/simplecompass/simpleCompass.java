@@ -1,5 +1,10 @@
 package io.github.yxyang.simplecompass;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,45 +13,61 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-public class simpleCompass extends AppCompatActivity {
+public class simpleCompass extends AppCompatActivity implements SensorEventListener{
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_simple_compass);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        TextView xView = (TextView) findViewById(R.id.xAxis);
+        xView.setTextSize(40);
+
+        TextView yView = (TextView) findViewById(R.id.yAxis);
+        yView.setTextSize(40);
+
+        TextView zView = (TextView) findViewById(R.id.zAxis);
+        zView.setTextSize(40);
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_simple_compass, menu);
-        return true;
+    public void onSensorChanged(SensorEvent event) {
+        float xAxis = event.values[0];
+        float yAxis = event.values[1];
+        float zAxis = event.values[2];
+
+        TextView xView = (TextView) findViewById(R.id.xAxis);
+        xView.setText("xAxis: " + String.format("%4.5f", xAxis));
+
+        TextView yView = (TextView) findViewById(R.id.yAxis);
+        yView.setText("yAxis: " + String.format("%4.5f", yAxis));
+
+        TextView zView = (TextView) findViewById(R.id.zAxis);
+        zView.setText("zAxis: " + String.format("%4.5f", zAxis));
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
+    }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener(this);
+    }
 
-        return super.onOptionsItemSelected(item);
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
